@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"log"
 	"math"
 	"net/http"
 	"snooze/helpers/generator"
@@ -21,6 +22,12 @@ func GetAllRest(c buffalo.Context) error {
 
 	data := []models.Rest{}
 	err := models.DB.All(&data)
+	if err != nil {
+		log.Printf("Error fetching data: %v", err)
+		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
+			"error": "Internal Server Error",
+		}))
+	}
 
 	total := len(data)
 
@@ -62,6 +69,12 @@ func GetActiveRest(c buffalo.Context) error {
 
 	data := []models.Rest{}
 	err := models.DB.Where("end_at IS NULL").All(&data)
+	if err != nil {
+		log.Printf("Error fetching data: %v", err)
+		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
+			"error": "Internal Server Error",
+		}))
+	}
 
 	total := len(data)
 

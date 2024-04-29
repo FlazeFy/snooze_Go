@@ -71,6 +71,8 @@ func App() *buffalo.App {
 		v1.GET("/rest", GetAllRest)
 		v1.GET("/rest/active", GetActiveRest)
 
+		v1.GET("/dictionaries/{type}", GetDictionaryByType)
+
 		v1.ServeFiles("/", http.FS(public.FS())) // serve files from the public directory
 	})
 

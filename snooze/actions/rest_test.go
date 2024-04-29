@@ -11,4 +11,3 @@ func (as *ActionSuite) Test_Rest_Show() {
 func (as *ActionSuite) Test_Rest_Add() {
 	as.Fail("Not Implemented!")
 }
-
