@@ -1,9 +1,9 @@
 ---
 development:
-  dialect: postgres
-  database: snooze_development
-  user: postgres
-  password: postgres
+  dialect: mysql
+  database: snooze
+  user: root
+  password: 
   host: 127.0.0.1
   pool: 5
 

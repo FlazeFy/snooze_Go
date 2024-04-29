@@ -2,7 +2,7 @@ package grifts
 
 import (
 	"snooze/actions"
-	
+
 	"github.com/gobuffalo/buffalo"
 )
 

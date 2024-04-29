@@ -64,10 +64,14 @@ func App() *buffalo.App {
 		app.Use(popmw.Transaction(models.DB))
 		// Setup and use translations:
 		app.Use(translations())
+		v1 := app.Group("/api/v1")
 
-		app.GET("/", HomeHandler)
+		v1.GET("/", HomeHandler)
 
-		app.ServeFiles("/", http.FS(public.FS())) // serve files from the public directory
+		v1.GET("/rest", GetAllRest)
+		v1.GET("/rest/active", GetActiveRest)
+
+		v1.ServeFiles("/", http.FS(public.FS())) // serve files from the public directory
 	})
 
 	return app

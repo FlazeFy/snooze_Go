@@ -1,0 +1,9 @@
+create_table("rest") {
+    t.Column("id", "string", {primary: true})
+    t.Column("rest_notes", "string", {"size": 144, "null": true})
+    t.Column("rest_category", "string", {"size": 36})
+    t.Column("started_at", "datetime")
+    t.Column("end_at", "datetime", {"null": true})
+    t.Column("created_at", "datetime")
+    t.Column("created_by", "string", {"size": 36})
+}
