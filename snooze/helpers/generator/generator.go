@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"snooze/helpers/typography"
+	"time"
 )
 
 func GenerateQueryMsg(ctx string, total int) string {
@@ -37,4 +38,13 @@ func GenerateValidatorMsg(ctx string, min, max int) string {
 	} else {
 		return fmt.Sprintf("%s must be between year %d and %d", ctx, min, max)
 	}
+}
+
+func GenerateTimeNow(name string) string {
+	if name == "timestamp" {
+		now := time.Now()
+		res := now.Format("2006-01-02 15:04:05")
+		return res
+	}
+	return ""
 }

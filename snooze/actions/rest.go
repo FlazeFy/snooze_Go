@@ -123,3 +123,48 @@ func PutActiveRest(c buffalo.Context) error {
 
 	return c.Render(http.StatusOK, r.JSON(res))
 }
+
+func PostRest(c buffalo.Context) error {
+	var res response.Response
+	tableName := models.Rest{}.TableName()
+
+	// createdAt := generator.GenerateTimeNow("timestamp")
+
+	restNotes := c.Request().FormValue("rest_notes")
+	if restNotes == "" {
+		return c.Render(http.StatusBadRequest, r.JSON(map[string]interface{}{
+			"error": "Missing rest_notes parameter",
+		}))
+	}
+	restCat := c.Request().FormValue("rest_category")
+	if restCat == "" {
+		return c.Render(http.StatusBadRequest, r.JSON(map[string]interface{}{
+			"error": "Missing rest_category parameter",
+		}))
+	}
+	startAt := c.Request().FormValue("started_at")
+	if startAt == "" {
+		return c.Render(http.StatusBadRequest, r.JSON(map[string]interface{}{
+			"error": "Missing started_at parameter",
+		}))
+	}
+	endAt := c.Request().FormValue("end_at")
+	if endAt == "" {
+		return c.Render(http.StatusBadRequest, r.JSON(map[string]interface{}{
+			"error": "Missing end_at parameter",
+		}))
+	}
+
+	err := models.DB.RawQuery("INSERT INTO rests(id, rest_notes, rest_category, started_at, end_at, created_at, created_by) VALUES (?,?,?,?,?,?,?)", restNotes, restCat, startAt, endAt, "123").Exec()
+	if err != nil {
+		log.Printf("Error create data: %v", err)
+		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
+			"error": "Internal Server Error",
+		}))
+	}
+
+	res.Status = http.StatusOK
+	res.Message = generator.GenerateCommandMsg("Create", tableName, 1)
+
+	return c.Render(http.StatusOK, r.JSON(res))
+}

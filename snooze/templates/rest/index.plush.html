@@ -1,10 +1,26 @@
 <div class="container-primary d-block mx-auto text-center" style="margin-top: 30vh; width: 720px;">
-    <h1>Hello, FlazeFy. Good Morning</h1><br>
+    <h1>Hello, FlazeFy. <span id="greeting"></span></h1><br>
     <div id="rest_active_holder"></div>
+    <div id="add_rest_holder"></div>
 </div>
-
+<div id="form_holder"></div>
 <script>
-    $('#rest_form_toogle').on('click', function(){});
+    getGreeting();
+    function getGreeting() {
+        const date = new Date();
+        const hour = date.getHours();
+        let greet;
+
+        if (hour >= 3 && hour <= 12) {
+            greet = "Good Morning"
+        } else if (hour > 12 && hour <= 18) {
+            greet = "Good Evening"
+        } else if ((hour > 18 && hour <= 23) || (hour >= 0 && hour < 3)) {
+            greet = "Good Night"
+        }
+
+        document.getElementById("greeting").innerHTML = greet
+    }
 
     get_active_rest()
     function get_active_rest() {
@@ -18,16 +34,50 @@
         })
         .done(function (response) {
             let data =  response.data
-            $('#rest_active_holder').empty().append(`
-                <h4 class="mb-0">Currently at ${data[0].rest_category}</h4>
-                <a>From ${get_date_to_context(data[0].created_at, 'calendar')}</a>
-                <p class="mt-2">${data[0].rest_notes ?? '<span class="fst-italic">- No Notes -</span>'}</p>
-                <button class="btn-power bg-success" onclick="finish_rest('${data[0].id}','${data[0].rest_category}')">Finish Now <br><h4 id="time_passed_holder">Count Time...</h4></button>
-            `)
 
-            setInterval(function() {
-                updateTimePassed(data[0].created_at, 'time_passed_holder');
-            }, 1000);
+            if(data){
+                $('#rest_active_holder').empty().append(`
+                    <h4 class="mb-0">Currently at ${data[0].rest_category}</h4>
+                    <a>From ${get_date_to_context(data[0].created_at, 'calendar')}</a>
+                    <p class="mt-2">${data[0].rest_notes ?? '<span class="fst-italic">- No Notes -</span>'}</p>
+                    <button class="btn-power bg-success" onclick="finish_rest('${data[0].id}','${data[0].rest_category}')">Finish Now <br><h4 id="time_passed_holder">Count Time...</h4></button>
+                `)
+
+                setInterval(function() {
+                    updateTimePassed(data[0].created_at, 'time_passed_holder');
+                }, 1000);
+            } else {
+                $('#add_rest_holder').empty().append(`
+                    <h4 class="mb-4">Tired of your activity? Wanna take some rest?</h4>
+                    <span id="category_rest_holder"></span>
+                `)
+                $.ajax({
+                    url: "http://127.0.0.1:3000/api/v1/dictionaries/rest_category",
+                    datatype: "json",
+                    type: "get",
+                    beforeSend: function (xhr) {
+                        //    
+                    },
+                })
+                .done(function (responseDct) {
+                    let dataDct =  responseDct.data
+
+                    $('#category_rest_holder').empty()
+                    dataDct.forEach(el => {
+                        $('#category_rest_holder').append(`
+                            <button type="button" class="btn btn-primary rounded-pill me-1" onclick="open_form('${el.dictionary_name}')">${el.dictionary_name}</button>
+                        `)
+                    });
+                })
+                .fail(function (jqXHR, ajaxOptions, thrownError) {
+                    Swal.fire({
+                        title: 'Ohh Noo, An Error just happen!',
+                        text: jqXHR.responseText || 'Unknown Error',
+                        icon: 'error',
+                        confirmButtonText: 'Send Error Report!'
+                    })
+                });
+            }
         })
         .fail(function (jqXHR, ajaxOptions, thrownError) {
             Swal.fire({
@@ -39,6 +89,97 @@
         });
     }
 
+    function open_form(category){
+        $('#form_holder').empty().append(`
+            <div class="container-primary d-block mx-auto" style="margin-top: var(--spaceMD); width: 720px;">
+                <h5>Do Rest : ${category}</h5>
+                <textarea class='form-control bg-transparent text-white' style='height: 120px;' id="rest_notes" name="rest_notes"></textarea>
+
+                <h6 class="mt-3">Started At</h6>
+                <div class="row">
+                    <div class="col">
+                        <input class="form-control bg-transparent text-white" type="date" name="date_start" id="date_start">    
+                    </div>
+                    <div class="col">
+                        <input class="form-control bg-transparent text-white" type="time" name="time_start" id="time_start">    
+                    </div>
+                </div>
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" value="" id="toogle_end_at" name="toogle_end_at" onclick="toogle_end_at(this)">
+                    <label class="form-check-label" for="flexCheckDefault">Ended At</label>
+                </div>
+                <div class="row" id="end_at_holder"></div>
+                <button class="btn btn-success w-100 mt-3" onclick="post_rest('${category}')">Take a Rest Now!</button>
+            </div>
+        `)
+
+        const now = new Date()
+        const year = now.getFullYear()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const day = String(now.getDate()).padStart(2, '0')
+        const hours = String(now.getHours()).padStart(2, '0')
+        const minutes = String(now.getMinutes()).padStart(2, '0')
+
+        const currentDate = `${year}-${month}-${day}`
+        const currentTime = `${hours}:${minutes}`
+
+        $('#date_start').val(currentDate)
+        $('#time_start').val(currentTime)
+    }
+
+    function toogle_end_at(val){
+        if(val.checked == true){
+            $('#end_at_holder').empty().append(`
+                <div class="col">
+                    <input class="form-control bg-transparent text-white" type="date" name="date_end" id="date_end">    
+                </div>
+                <div class="col">
+                    <input class="form-control bg-transparent text-white" type="time" name="time_end" id="time_end">    
+                </div>
+            `)
+        } else {
+            $('#end_at_holder').empty()
+        }
+    }
+
+    function post_rest(category){
+        const csrfToken = $('meta[name="csrf-token"]').attr('content')
+
+        $.ajax({
+            url: `http://127.0.0.1:3000/api/v1/rest`,
+            datatype: "multipart/form-data",
+            data: {
+                rest_notes : $('#rest_notes').val(),
+                rest_category : category,
+                started_at :  $('#date_start').val()+' '+$('#time_start').val(),
+                end_at :  $('#date_end').val()+' '+$('#time_end').val(),
+            },
+            type: "POST",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('X-CSRF-Token', csrfToken)
+            },
+        })
+        .done(function (response) {
+            let data =  response.data
+            $('#rest_active_holder').empty()
+            get_active_rest()
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Rest has started!',
+                icon: 'success',
+                confirmButtonText: "Dont disturb me!"
+            });
+        })
+        .fail(function (jqXHR, ajaxOptions, thrownError) {
+            Swal.fire({
+                title: 'Ohh Noo, An Error just happen!',
+                text: jqXHR.responseText || 'Unknown Error',
+                icon: 'error',
+                confirmButtonText: 'Send Error Report!'
+            })
+        });
+    }
 
     function finish_rest(id, category){
         const csrfToken = $('meta[name="csrf-token"]').attr('content')
