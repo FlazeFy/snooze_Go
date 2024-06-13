@@ -1,9 +1,11 @@
-<div class="container-primary d-block mx-auto text-center" style="margin-top: 30vh; width: 720px;">
-    <h1>Hello, FlazeFy. <span id="greeting"></span></h1><br>
+<div class="container-primary d-block mx-auto text-center position-relative" style="margin-top: 30vh; width: 720px;">
+    <button class="btn btn-success rounded-pill py-2 px-3 position-absolute" onclick="get_all_rest()" style="top: -20px; left: -10px;">Show History</button>
+    <h1 class="mt-3">Hello, FlazeFy. <span id="greeting"></span></h1><br>
     <div id="rest_active_holder"></div>
     <div id="add_rest_holder"></div>
 </div>
 <div id="form_holder"></div>
+<div id="history_holder"></div>
 <script>
     getGreeting();
     function getGreeting() {
@@ -89,7 +91,64 @@
         });
     }
 
+    function get_all_rest() {
+        $.ajax({
+            url: "http://127.0.0.1:3000/api/v1/rest",
+            datatype: "json",
+            type: "get",
+            beforeSend: function (xhr) {
+                //    
+            },
+        })
+        .done(function (response) {
+            $('#form_holder').empty()
+
+            let data = response.data.data
+            let page_length = response.data.last_page
+            let elmt = ''
+
+            elmt += `
+                <div class="container-primary d-block mx-auto" style="margin-top: var(--spaceMD); width: 720px;">
+                    <h5>History</h5>
+            `
+
+            data.forEach(el => {
+                elmt += `
+                    <div class="card">
+                        <div class="d-flex justify-content-between">
+                            <div style="width:280px;">
+                                <b>${el.rest_category}</b>
+                                <p class="mb-0">${el.rest_notes == null ? '<span class="fst-italic">- No Notes -</span>' : '<b>Notes :</b> '+el.rest_notes}</p>
+                            </div>
+                            <div>
+                                <h6>From</h6>
+                                <p class="mb-0">${get_date_to_context(el.started_at, 'calendar')}</p>
+                            </div>
+                            <div>
+                                <h6>Until</h6>
+                                <p class="mb-0">${get_date_to_context(el.end_at, 'calendar')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            });
+
+            elmt += `</div>`
+
+            $('#history_holder').empty().append(elmt)
+        })
+        .fail(function (jqXHR, ajaxOptions, thrownError) {
+            Swal.fire({
+                title: 'Ohh Noo, An Error just happen!',
+                text: jqXHR.responseText || 'Unknown Error',
+                icon: 'error',
+                confirmButtonText: 'Send Error Report!'
+            })
+        });
+    }
+
     function open_form(category){
+        $('#history_holder').empty()
         $('#form_holder').empty().append(`
             <div class="container-primary d-block mx-auto" style="margin-top: var(--spaceMD); width: 720px;">
                 <h5>Do Rest : ${category}</h5>
@@ -152,7 +211,7 @@
                 rest_notes : $('#rest_notes').val(),
                 rest_category : category,
                 started_at :  $('#date_start').val()+' '+$('#time_start').val(),
-                end_at :  $('#date_end').val()+' '+$('#time_end').val(),
+                end_at: $('#date_end').val() && $('#time_end').val() ? $('#date_end').val() + ' ' + $('#time_end').val() : null,
             },
             type: "POST",
             beforeSend: function (xhr) {

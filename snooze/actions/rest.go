@@ -72,7 +72,7 @@ func GetActiveRest(c buffalo.Context) error {
 	tableName := models.Rest{}.TableName()
 
 	data := []models.Rest{}
-	err := models.DB.Where("end_at IS NULL").All(&data)
+	err := models.DB.Where("end_at IS NULL OR is_finished = 0").All(&data)
 	if err != nil {
 		log.Printf("Error fetching data: %v", err)
 		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
@@ -110,7 +110,7 @@ func PutActiveRest(c buffalo.Context) error {
 		}))
 	}
 
-	err := models.DB.RawQuery("UPDATE rests SET end_at = ? WHERE id = ?", endAt, id).Exec()
+	err := models.DB.RawQuery("UPDATE rests SET end_at = ?, is_finished = 1 WHERE id = ?", endAt, id).Exec()
 	if err != nil {
 		log.Printf("Error updating data: %v", err)
 		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
@@ -127,8 +127,8 @@ func PutActiveRest(c buffalo.Context) error {
 func PostRest(c buffalo.Context) error {
 	var res response.Response
 	tableName := models.Rest{}.TableName()
-
-	// createdAt := generator.GenerateTimeNow("timestamp")
+	id, _ := generator.GenerateUUID(16)
+	createdAt := generator.GenerateTimeNow("timestamp")
 
 	restNotes := c.Request().FormValue("rest_notes")
 	if restNotes == "" {
@@ -149,17 +149,23 @@ func PostRest(c buffalo.Context) error {
 		}))
 	}
 	endAt := c.Request().FormValue("end_at")
-	if endAt == "" {
-		return c.Render(http.StatusBadRequest, r.JSON(map[string]interface{}{
-			"error": "Missing end_at parameter",
-		}))
+
+	var query string
+	var params []interface{}
+
+	if endAt != "" {
+		query = "INSERT INTO rests(id, rest_notes, rest_category, started_at, end_at, is_finished, created_at, created_by) VALUES (?,?,?,?,?,?,?,?)"
+		params = []interface{}{id, restNotes, restCat, startAt, endAt, 0, createdAt, "123"}
+	} else {
+		query = "INSERT INTO rests(id, rest_notes, rest_category, started_at, is_finished, created_at, created_by) VALUES (?,?,?,?,?,?,?)"
+		params = []interface{}{id, restNotes, restCat, startAt, 0, createdAt, "123"}
 	}
 
-	err := models.DB.RawQuery("INSERT INTO rests(id, rest_notes, rest_category, started_at, end_at, created_at, created_by) VALUES (?,?,?,?,?,?,?)", restNotes, restCat, startAt, endAt, "123").Exec()
+	err := models.DB.RawQuery(query, params...).Exec()
 	if err != nil {
 		log.Printf("Error create data: %v", err)
 		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
-			"error": "Internal Server Error",
+			"error": err.Error(),
 		}))
 	}
 
