@@ -188,6 +188,12 @@
         return offsetHr
     }
 
+    function formatTimestamp(val) {
+        const date = new Date(val)
+        const res = date.toISOString().slice(0, 19).replace('T', ' ')
+        return res
+    }
+
     function updateTimePassed(val,target) {
       const startDate = new Date(val)
       const now = new Date()

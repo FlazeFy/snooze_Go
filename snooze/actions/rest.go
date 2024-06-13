@@ -96,3 +96,30 @@ func GetActiveRest(c buffalo.Context) error {
 
 	return c.Render(http.StatusOK, r.JSON(res))
 }
+
+func PutActiveRest(c buffalo.Context) error {
+	var res response.Response
+	tableName := models.Rest{}.TableName()
+
+	id := c.Param("id")
+
+	endAt := c.Request().FormValue("end_at")
+	if endAt == "" {
+		return c.Render(http.StatusBadRequest, r.JSON(map[string]interface{}{
+			"error": "Missing end_at parameter",
+		}))
+	}
+
+	err := models.DB.RawQuery("UPDATE rests SET end_at = ? WHERE id = ?", endAt, id).Exec()
+	if err != nil {
+		log.Printf("Error updating data: %v", err)
+		return c.Render(http.StatusInternalServerError, r.JSON(map[string]interface{}{
+			"error": "Internal Server Error",
+		}))
+	}
+
+	res.Status = http.StatusOK
+	res.Message = generator.GenerateCommandMsg("Update", tableName, 1)
+
+	return c.Render(http.StatusOK, r.JSON(res))
+}

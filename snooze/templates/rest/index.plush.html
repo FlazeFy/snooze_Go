@@ -22,12 +22,13 @@
                 <h4 class="mb-0">Currently at ${data[0].rest_category}</h4>
                 <a>From ${get_date_to_context(data[0].created_at, 'calendar')}</a>
                 <p class="mt-2">${data[0].rest_notes ?? '<span class="fst-italic">- No Notes -</span>'}</p>
-                <button class="btn-power bg-success">Finish Now <br><h4 id="time_passed_holder">Count Time...</h4></button>
+                <button class="btn-power bg-success" onclick="finish_rest('${data[0].id}','${data[0].rest_category}')">Finish Now <br><h4 id="time_passed_holder">Count Time...</h4></button>
             `)
 
             setInterval(function() {
                 updateTimePassed(data[0].created_at, 'time_passed_holder');
-            }, 1000);})
+            }, 1000);
+        })
         .fail(function (jqXHR, ajaxOptions, thrownError) {
             Swal.fire({
                 title: 'Ohh Noo, An Error just happen!',
@@ -35,6 +36,54 @@
                 icon: 'error',
                 confirmButtonText: 'Send Error Report!'
             })
+        });
+    }
+
+
+    function finish_rest(id, category){
+        const csrfToken = $('meta[name="csrf-token"]').attr('content')
+
+        Swal.fire({
+            title: `Do you want to finish your ${category}?`,
+            showDenyButton: true,
+            confirmButtonText: "Yes, My energy is back!",
+            denyButtonText: `I think I need more`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `http://127.0.0.1:3000/api/v1/rest/${id}`,
+                    datatype: "multipart/form-data",
+                    data: {
+                        end_at : formatTimestamp(Date.now())
+                    },
+                    type: "PUT",
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader('X-CSRF-Token', csrfToken)
+                    },
+                })
+                .done(function (response) {
+                    let data =  response.data
+                    $('#rest_active_holder').empty()
+                    get_active_rest()
+
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'You have finished your rest, Have a good day',
+                        icon: 'success',
+                        confirmButtonText: "Let's Goo"
+                    });
+                })
+                .fail(function (jqXHR, ajaxOptions, thrownError) {
+                    Swal.fire({
+                        title: 'Ohh Noo, An Error just happen!',
+                        text: jqXHR.responseText || 'Unknown Error',
+                        icon: 'error',
+                        confirmButtonText: 'Send Error Report!'
+                    })
+                });
+            } else if (result.isDenied) {
+                Swal.fire("Okay, continue your rest", "", "info");
+            }
         });
     }
 </script>

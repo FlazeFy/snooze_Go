@@ -73,6 +73,7 @@ func App() *buffalo.App {
 		// Rest API
 		v1.GET("/rest", GetAllRest)
 		v1.GET("/rest/active", GetActiveRest)
+		v1.PUT("/rest/{id}", PutActiveRest) // put error
 
 		v1.GET("/dictionaries/{type}", GetDictionaryByType)
 
