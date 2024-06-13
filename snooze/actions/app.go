@@ -66,8 +66,11 @@ func App() *buffalo.App {
 		app.Use(translations())
 		v1 := app.Group("/api/v1")
 
-		v1.GET("/", HomeHandler)
+		// Pages
+		app.GET("/", HomeHandler)
+		app.GET("/dashboard", RestHandler)
 
+		// Rest API
 		v1.GET("/rest", GetAllRest)
 		v1.GET("/rest/active", GetActiveRest)
 

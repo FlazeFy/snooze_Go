@@ -1,1 +1,40 @@
-<h1>Rest#Index</h1>
+<div class="container-primary d-block mx-auto text-center" style="margin-top: 30vh; width: 720px;">
+    <h1>Hello, FlazeFy. Good Morning</h1><br>
+    <div id="rest_active_holder"></div>
+</div>
+
+<script>
+    $('#rest_form_toogle').on('click', function(){});
+
+    get_active_rest()
+    function get_active_rest() {
+        $.ajax({
+            url: "http://127.0.0.1:3000/api/v1/rest/active",
+            datatype: "json",
+            type: "get",
+            beforeSend: function (xhr) {
+                //    
+            },
+        })
+        .done(function (response) {
+            let data =  response.data
+            $('#rest_active_holder').empty().append(`
+                <h4 class="mb-0">Currently at ${data[0].rest_category}</h4>
+                <a>From ${get_date_to_context(data[0].created_at, 'calendar')}</a>
+                <p class="mt-2">${data[0].rest_notes ?? '<span class="fst-italic">- No Notes -</span>'}</p>
+                <button class="btn-power bg-success">Finish Now <br><h4 id="time_passed_holder">Count Time...</h4></button>
+            `)
+
+            setInterval(function() {
+                updateTimePassed(data[0].created_at, 'time_passed_holder');
+            }, 1000);})
+        .fail(function (jqXHR, ajaxOptions, thrownError) {
+            Swal.fire({
+                title: 'Ohh Noo, An Error just happen!',
+                text: jqXHR.responseText || 'Unknown Error',
+                icon: 'error',
+                confirmButtonText: 'Send Error Report!'
+            })
+        });
+    }
+</script>

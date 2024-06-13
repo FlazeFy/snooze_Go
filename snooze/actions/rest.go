@@ -13,6 +13,10 @@ import (
 	"github.com/gobuffalo/buffalo"
 )
 
+func RestHandler(c buffalo.Context) error {
+	return c.Render(http.StatusOK, r.HTML("rest/index.plush.html"))
+}
+
 func GetAllRest(c buffalo.Context) error {
 	page, _ := strconv.Atoi(c.Params().Get("page"))
 
